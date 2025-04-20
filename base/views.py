@@ -9,9 +9,5 @@ def getComponents(request):
 def createComponent(request):
     return render(request )
 
-
 def updateComponent(request , pk):
-    return render(request)
-
-def updateComponent(request, pk):
     return render(request)

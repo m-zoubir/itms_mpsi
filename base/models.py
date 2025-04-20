@@ -1,8 +1,6 @@
 from django.db import models
 
 
-
-
 class Component(models.Model):
     numero_serie = models.CharField(max_length=200)
     numero_serie_eq = models.CharField(max_length=200)
