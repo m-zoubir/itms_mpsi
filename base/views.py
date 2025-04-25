@@ -1,17 +1,18 @@
-from django.shortcuts import render
-
-# Create your views here.
-
-
-def getComponents(request):
-    return render(request,'componentsListPage.html')
-
-def createComponent(request):
-    return render(request )
+from rest_framework import viewsets
+from .models import Categorie, Composant , Equipement
+from .serializers import CategorieSerializer, ComposantSerializer , EquipementSerializer
+from rest_framework.response import Response
 
 
-def updateComponent(request , pk):
-    return render(request)
 
-def updateComponent(request, pk):
-    return render(request)
+class CategorieViewSet(viewsets.ModelViewSet):
+    queryset = Categorie.objects.all()
+    serializer_class = CategorieSerializer
+
+class ComposantViewSet(viewsets.ModelViewSet):
+    queryset = Composant.objects.all()
+    serializer_class = ComposantSerializer
+    
+class   EquipementViewSet(viewsets.ModelViewSet):
+    queryset = Equipement.objects.all()
+    serializer_class = EquipementSerializer
