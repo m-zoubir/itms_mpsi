@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import AbstractUser
+
 
 class Categorie(models.Model):
     id_categorie = models.AutoField(primary_key=True)
@@ -82,3 +84,20 @@ class Equipement(models.Model):
         return self.designation
 
     
+
+
+
+#--------------------------------------Users------------------------------------
+
+
+
+class User(AbstractUser):
+    email = models.EmailField(unique=True)
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    def __str__(self):
+        return self.email
+    
+    pass
