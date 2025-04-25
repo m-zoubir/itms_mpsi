@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
+from django.urls import path
 from . import views
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
-router = DefaultRouter()
-router.register(r'demandes', views.DemandeViewSet)
-router.register(r'interventions', views.InterventionViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
-]
-
-urlpatterns = [
-    path('', views.getComponents ,name='get-components'),
+    path('demandes/', views.DemandeListView.as_view(), name='demande_list'),
+    path('demandes/<int:pk>/', views.DemandeDetailView.as_view(), name='demande_detail'),
+    path('interventions/', views.InterventionListView.as_view(), name='intervention_list'),
+    path('interventions/<int:pk>/', views.InterventionDetailView.as_view(), name='intervention_detail'),
 ]
