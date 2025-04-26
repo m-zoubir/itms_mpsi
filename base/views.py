@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from .models import Categorie, Composant , Equipement , User
-from .serializers import CategorieSerializer, ComposantSerializer , EquipementSerializer , LoginSerializer, AdminUserCreateSerializer , AdminUserSerializer, PasswordSerializer
+from .models import Categorie, Composant , Equipement , User , Demande , Intervention
+from .serializers import *
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
@@ -96,3 +96,15 @@ class AdminPasswordUpdateView(generics.UpdateAPIView):
         user.set_password(request.data['password'])
         user.save()
         return Response({'message': 'Password updated successfully'})
+    
+
+#------------------Interventions et Demandes--------------------------
+
+
+class DemandeViewSet(viewsets.ModelViewSet):
+    queryset = Demande.objects.all()
+    serializer_class = DemandeSerializer
+
+class InterventionViewSet(viewsets.ModelViewSet):
+    queryset = Intervention.objects.all()
+    serializer_class = InterventionSerializer

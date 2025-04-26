@@ -12,6 +12,8 @@ router = DefaultRouter()
 router.register(r'api/categories', CategorieViewSet, basename='categories')
 router.register(r'api/composants', ComposantViewSet, basename='composants')
 router.register(r'api/equipements', EquipementViewSet, basename='equipements')
+router.register(r'api/interventions', InterventionViewSet, basename='interventions')
+router.register(r'api/demandes', DemandeViewSet, basename='demandes')
 
 
 urlpatterns = [

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Categorie, Composant , Equipement , User
+from .models import Categorie, Composant , Equipement , User , Demande , Intervention
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 
@@ -114,3 +114,25 @@ class LoginSerializer(serializers.Serializer):
 
 class PasswordSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, required=True)
+
+
+
+
+#-----------------------Interventions et Demandes------------------------------
+
+
+class InterventionSerializer(serializers.ModelSerializer):
+    components_used = ComposantSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Intervention
+        fields = '__all__'
+        read_only_fields = ('date_sortie',)
+
+class DemandeSerializer(serializers.ModelSerializer):
+    interventions = InterventionSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Demande
+        fields = '__all__'
+        read_only_fields = ('date_depot',)
