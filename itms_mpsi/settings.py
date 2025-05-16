@@ -127,3 +127,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+ALLOWED_HOSTS = [
+    'itms-mpsi.onrender.com',  # Your Render domain
+    '.onrender.com',           # Allow all Render subdomains
+    'localhost',               # For local testing
+    '127..0.1',               # For local testing
+]
+
+import os
+
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
