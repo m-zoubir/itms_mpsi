@@ -80,6 +80,9 @@ class AdminUserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email']
         read_only_fields = ['id', 'email']
 
+
+        
+
 class AdminUserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
