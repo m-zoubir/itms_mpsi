@@ -132,29 +132,45 @@ class InterventionViewSet(viewsets.ModelViewSet):
 
 #------------------Dashboard--------------------------
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.db.models import Count
+from django.db.models.functions import ExtractMonth, ExtractYear
+from django.utils.timezone import now
 
 class DashboardAPIView(APIView):
     def get(self, request):
-        current_year = now().year
-        last_year = current_year - 1
+        current_date = now()
+        current_month = current_date.month
+        current_year = current_date.year
+        last_month = current_month - 1 if current_month > 1 else 12
+        last_month_year = current_year if current_month > 1 else current_year - 1
 
-        # --- Total counts per year ---
-        demandes_this_year = Demande.objects.filter(date_depot__year=current_year).count()
-        demandes_last_year = Demande.objects.filter(date_depot__year=last_year).count()
-
-        interventions_this_year = Intervention.objects.filter(created_at__year=current_year).count()
-        interventions_last_year = Intervention.objects.filter(created_at__year=last_year).count()
-
-        composants_this_year = Composant.objects.filter(created_at__year=current_year).count()
-        composants_last_year = Composant.objects.filter(created_at__year=last_year).count()
-
-        equipements_this_year = Equipement.objects.filter(created_at__year=current_year).count()
-        equipements_last_year = Equipement.objects.filter(created_at__year=last_year).count()
-
+        # --- Helper Function ---
         def percentage_diff(current, last):
             return 100 if last == 0 and current > 0 else round(((current - last) / last) * 100) if last > 0 else 0
 
-        # --- Monthly demandes ---
+        # --- Monthly Counts ---
+        demandes_this_month = Demande.objects.filter(date_depot__year=current_year, date_depot__month=current_month).count()
+        demandes_last_month = Demande.objects.filter(date_depot__year=last_month_year, date_depot__month=last_month).count()
+        demandes_this_year = Demande.objects.filter(date_depot__year=current_year).count()
+
+        interventions_this_month = Intervention.objects.filter(created_at__year=current_year, created_at__month=current_month, status="enCours").count()
+        interventions_last_month = Intervention.objects.filter(created_at__year=last_month_year, created_at__month=last_month, status="enCours").count()
+        interventions_this_year = Intervention.objects.filter(created_at__year=current_year).count()
+
+        composants_ancien_this_month = Composant.objects.filter(created_at__year=current_year, created_at__month=current_month, status='Free', type_composant='Ancien').count()
+        composants_ancien_last_month = Composant.objects.filter(created_at__year=last_month_year, created_at__month=last_month, status='Free', type_composant='Ancien').count()
+        composants_this_year = Composant.objects.filter(created_at__year=current_year).count()
+
+        composants_nouveau_this_month = Composant.objects.filter(created_at__year=current_year, created_at__month=current_month, disponible=True, type_composant='Nouveau').count()
+        composants_nouveau_last_month = Composant.objects.filter(created_at__year=last_month_year, created_at__month=last_month, disponible=True, type_composant='Nouveau').count()
+
+        equipements_this_month = Equipement.objects.filter(created_at__year=current_year, created_at__month=current_month).count()
+        equipements_last_month = Equipement.objects.filter(created_at__year=last_month_year, created_at__month=last_month).count()
+        equipements_this_year = Equipement.objects.filter(created_at__year=current_year).count()
+
+        # --- Monthly demandes by month ---
         demandes_by_month = Demande.objects.filter(date_depot__year=current_year).annotate(
             month=ExtractMonth('date_depot')
         ).values('month').annotate(value=Count('id')).order_by('month')
@@ -169,27 +185,36 @@ class DashboardAPIView(APIView):
             "value": item["value"]
         } for item in demandes_by_month]
 
+        # --- Yearly stats for each entity ---
+        def yearly_stats(model, date_field):
+            return model.objects.annotate(year=ExtractYear(date_field)).values("year").annotate(total=Count("id")).order_by("year")
+
         data = {
             "totals": [
                 {
-                    "name": "Total demande",
-                    "value": demandes_this_year,
-                    "pourcentage diff": percentage_diff(demandes_this_year, demandes_last_year)
+                    "name": "Total des demandes",
+                    "value": Demande.objects.count(),
+                    "pourcentage diff": percentage_diff(demandes_this_month, demandes_last_month)
                 },
                 {
-                    "name": "Total intervention",
-                    "value": interventions_this_year,
-                    "pourcentage diff": percentage_diff(interventions_this_year, interventions_last_year)
+                    "name": "Interventions actives",
+                    "value": interventions_this_month,
+                    "pourcentage diff": percentage_diff(interventions_this_month, interventions_last_month)
                 },
                 {
-                    "name": "Total composant",
-                    "value": composants_this_year,
-                    "pourcentage diff": percentage_diff(composants_this_year, composants_last_year)
+                    "name": "Anciens composants disponibles",
+                    "value": Composant.objects.filter(status='Free', type_composant='Ancien').count(),
+                    "pourcentage diff": percentage_diff(composants_ancien_this_month, composants_ancien_last_month)
                 },
                 {
-                    "name": "Total equipement",
-                    "value": equipements_this_year,
-                    "pourcentage diff": percentage_diff(equipements_this_year, equipements_last_year)
+                    "name": "Nouveaux composants disponibles",
+                    "value": Composant.objects.filter(disponible=True, type_composant='Nouveau').count(),
+                    "pourcentage diff": percentage_diff(composants_nouveau_this_month, composants_nouveau_last_month)
+                },
+                {
+                    "name": "Équipements total",
+                    "value": Equipement.objects.count(),
+                    "pourcentage diff": percentage_diff(equipements_this_month, equipements_last_month)
                 },
             ],
             "demandes": [
@@ -198,31 +223,39 @@ class DashboardAPIView(APIView):
                     "months": demandes_months
                 }
             ],
-            "demandestats": [
+            "demandestats": 
                 {
                     "year": current_year,
                     "total": demandes_this_year,
                     "total rejetee": Demande.objects.filter(status_demande='Rejetee', date_depot__year=current_year).count(),
-                    "total accpete": Demande.objects.filter(status_demande='Acceptee', date_depot__year=current_year).count(),
-                }
-            ],
-            "interventionsstats": [
+                    "total acceptee": Demande.objects.filter(status_demande='Acceptee', date_depot__year=current_year).count(),
+                    "demande_years": list(yearly_stats(Demande, "date_depot")),
+
+                },
+            
+            "interventionsstats": 
                 {
                     "year": current_year,
                     "total": interventions_this_year,
                     "total irreparable": Intervention.objects.filter(status='Irreparable', created_at__year=current_year).count(),
                     "total completed": Intervention.objects.filter(status='Termine', created_at__year=current_year).count(),
                     "total encours": Intervention.objects.filter(status='enCours', created_at__year=current_year).count(),
-                }
-            ],
-            "composantstats": [
+                    "intervention_years": list(yearly_stats(Intervention, "created_at")),
+
+                },
+            
+            "composantstats": 
                 {
                     "year": current_year,
                     "total": composants_this_year,
                     "total ancien": Composant.objects.filter(type_composant='Ancien', created_at__year=current_year).count(),
-                    "total mouveau": Composant.objects.filter(type_composant='Nouveau', created_at__year=current_year).count(),
+                    "total nouveau": Composant.objects.filter(type_composant='Nouveau', created_at__year=current_year).count(),
+                    "composant_years": list(yearly_stats(Composant, "created_at")),
+
                 }
-            ]
+           
+           ,
+            "equipementstats": list(yearly_stats(Equipement, "created_at")),
         }
 
         return Response(data)
