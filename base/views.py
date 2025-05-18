@@ -290,18 +290,16 @@ def export_equipements_pdf(request):
 
     # Get data from database
     equipements = Equipement.objects.all().values_list(
-        'id', 'designation', 'numero_serie', 'numero_inventaire', 'created_at'
+         'designation', 'numero_inventaire', 'created_at'
     )
 
     # Create table data
-    data = [['ID', 'Designation', 'Serial No', 'Inventory No', 'Created At']]
+    data = [[ 'Designation', 'Inventory No', 'Created At']]
     for equip in equipements:
         data.append([
             str(equip[0]),
             equip[1],
-            equip[2],
-            equip[3],
-            equip[4].strftime('%Y-%m-%d')
+            equip[2].strftime('%Y-%m-%d')
         ])
 
     # Create table
