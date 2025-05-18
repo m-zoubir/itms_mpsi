@@ -25,7 +25,7 @@ class ComposantSerializer(serializers.ModelSerializer):
             'id', 'type_composant', 'model_reference', 'numero_serie',
             'designation', 'observation', 'categorie' ,'categorie_details',
             'numero_serie_eq_source', 'numero_inventaire_eq_source', 'status',
-            'quantity', 'disponible'
+            'quantity', 'disponible', 'image'
         ]
         extra_kwargs = {
             'disponible': {'default': True},
@@ -62,6 +62,13 @@ class ComposantSerializer(serializers.ModelSerializer):
             data['status'] = None
         
         return data
+    
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.image:
+            representation['image'] = instance.image.url
+        return representation
     
 
 

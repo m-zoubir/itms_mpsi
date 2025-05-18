@@ -41,6 +41,9 @@ class Composant(models.Model):
     quantity = models.IntegerField(blank=True, null=True, default=1)
     disponible = models.BooleanField(default=True, blank=True, null=True)
 
+    image = models.ImageField(upload_to='images_composants/', blank=True, null=True)
+
+
     def __str__(self):
         return f"{self.type_composant} - {self.designation}"
 
