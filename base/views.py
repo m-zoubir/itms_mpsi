@@ -20,7 +20,16 @@ class CategorieViewSet(viewsets.ModelViewSet):
 class ComposantViewSet(viewsets.ModelViewSet):
     queryset = Composant.objects.all()
     serializer_class = ComposantSerializer
-    permission_classes = [permissions.AllowAny]  
+    permission_classes = [permissions.AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     
 class   EquipementViewSet(viewsets.ModelViewSet):
@@ -112,10 +121,12 @@ class AdminPasswordUpdateView(generics.UpdateAPIView):
 class DemandeViewSet(viewsets.ModelViewSet):
     queryset = Demande.objects.all()
     serializer_class = DemandeSerializer
+    permission_classes = [permissions.AllowAny]  
 
 class InterventionViewSet(viewsets.ModelViewSet):
     queryset = Intervention.objects.all()
     serializer_class = InterventionSerializer
+    permission_classes = [permissions.AllowAny]  
 
 
 

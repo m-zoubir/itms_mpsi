@@ -22,7 +22,7 @@ class ComposantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Composant
         fields = [
-            'id_composant', 'type_composant', 'model_reference', 'numero_serie',
+            'id', 'type_composant', 'model_reference', 'numero_serie',
             'designation', 'observation', 'categorie' ,'categorie_details',
             'numero_serie_eq_source', 'numero_inventaire_eq_source', 'status',
             'quantity', 'disponible'
@@ -34,7 +34,7 @@ class ComposantSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
-        type_composant = data.get('type_composant', self.instance.type_composant if self.instance else None)
+        type_composant = data.get('type_composant')
         
         if type_composant == 'Ancien':
             required_fields = {
@@ -42,10 +42,11 @@ class ComposantSerializer(serializers.ModelSerializer):
                 'numero_inventaire_eq_source': 'Required for Ancien composant',
                 'status': 'Required for Ancien composant'
             }
-            for field, error_msg in required_fields.items():
-                if not data.get(field):
-                    raise serializers.ValidationError({field: error_msg})
+            for field, message in required_fields.items():
+                if data.get(field) in [None, '']:
+                    raise serializers.ValidationError({field: message})
             
+            # Ensure these are null for Ancien
             data['quantity'] = None
             data['disponible'] = None
             
@@ -55,6 +56,7 @@ class ComposantSerializer(serializers.ModelSerializer):
             if data.get('disponible') is None:
                 data['disponible'] = True
                 
+            # Ensure these are null for Nouveau
             data['numero_serie_eq_source'] = None
             data['numero_inventaire_eq_source'] = None
             data['status'] = None
