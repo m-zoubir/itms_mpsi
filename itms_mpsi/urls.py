@@ -25,6 +25,8 @@ urlpatterns = [
     path('api/admin/users/<int:pk>/', AdminUserDetailView.as_view(), name='admin-user-detail'),
     path('api/admin/users/<int:pk>/password/', AdminPasswordUpdateView.as_view(), name='admin-password-update'),
     path('admin/', admin.site.urls),
+    path('api/dashboard/', DashboardAPIView.as_view(), name='dashboard'),
+
     ]
 
 

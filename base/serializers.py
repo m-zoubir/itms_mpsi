@@ -125,8 +125,8 @@ class PasswordSerializer(serializers.Serializer):
 
 
 class InterventionSerializer(serializers.ModelSerializer):
-    components_used = ComposantSerializer(many=True, read_only=True)
-    
+    composants_utilises = ComposantSerializer(many=True, read_only=True)
+
     class Meta:
         model = Intervention
         fields = '__all__'
@@ -139,3 +139,19 @@ class DemandeSerializer(serializers.ModelSerializer):
         model = Demande
         fields = '__all__'
         read_only_fields = ('date_depot',)
+
+
+
+
+class DashboardSerializer(serializers.Serializer):
+    demandes_this_month = serializers.IntegerField()
+    composants_this_month = serializers.IntegerField()
+    equipements_this_month = serializers.IntegerField()
+    interventions_this_month = serializers.IntegerField()
+
+    demandes_diff_rate = serializers.FloatField()
+    composants_diff_rate = serializers.FloatField()
+    equipements_diff_rate = serializers.FloatField()
+    interventions_diff_rate = serializers.FloatField()
+
+    demandes_by_month_year = serializers.JSONField()

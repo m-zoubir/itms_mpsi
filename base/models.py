@@ -21,14 +21,13 @@ class Composant(models.Model):
         ('Free', 'Free'),
     ]
 
-    id_composant = models.AutoField(primary_key=True)
     type_composant = models.CharField(max_length=20, choices=TYPE_CHOICES)
     model_reference = models.TextField(blank=True, null=True)
     numero_serie = models.CharField(max_length=100)
     designation = models.TextField()
     observation = models.TextField(blank=True, null=True)
     categorie = models.ForeignKey(Categorie, on_delete=models.SET_NULL, null=True, blank=True)
-    
+    created_at = models.DateTimeField(auto_now_add=True)
     numero_serie_eq_source = models.CharField(max_length=100, blank=True, null=True)
     numero_inventaire_eq_source = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, blank=True, null=True)
@@ -72,8 +71,8 @@ class Composant(models.Model):
 class Equipement(models.Model):
 
 
-    id_equipement = models.AutoField(primary_key=True)
     model_reference = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     numero_serie = models.CharField(max_length=100)
     designation = models.TextField()
     observation = models.TextField(blank=True, null=True)
@@ -128,7 +127,7 @@ class Demande(models.Model):
         ('Enseignant', 'Enseignant'),
         ('Employe', 'Employe'),
     ]
-    id = models.AutoField(primary_key=True)
+
     type_materiel = models.CharField(max_length=100, choices=TYPE_MATERIEL_CHOICES)
     marque = models.CharField(max_length=100, blank=True, null=True)
     numero_inventaire = models.CharField(max_length=100)
@@ -138,12 +137,17 @@ class Demande(models.Model):
     numero_telephone = models.CharField(max_length=12)
     email = models.EmailField(max_length=100)
     status = models.CharField(max_length=100, choices=TYPE_DEPOSANT_CHOICES)
-    panne_declaree = models.TextField()
+    panne_declaree = models.TextField(blank=True, null=True)
     status_demande = models.CharField(max_length=100, choices=STATUS_DEMANDE_CHOICES, default='Nouvelle')
 
 
     def __str__(self):
         return f"Demande #{self.id} - {self.type_materiel}"
+    
+
+    @property
+    def designation(self):
+        return f"{self.type_materiel} - {self.marque or 'Sans marque'}"
 
 
 
@@ -160,17 +164,19 @@ class Intervention(models.Model):
         ('Termine', 'Termine'),
         ('Irreparable', 'Irreparable'),
     ]
-    id = models.AutoField(primary_key=True, editable=False)  
+
+
     demande_id = models.ForeignKey(Demande, on_delete=models.CASCADE, related_name='interventions')
+    created_at = models.DateTimeField(auto_now_add=True)
     technicien = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='interventions')
-    numero_serie = models.CharField(max_length=100)
-    priorite = models.CharField(max_length=100, choices=PRIORITE_CHOICES)
-    panne_trouvee = models.TextField()
+    numero_serie = models.CharField(max_length=100 , blank=True, null=True)
+    priorite = models.CharField(max_length=100, choices=PRIORITE_CHOICES, default='Moyenne')
+    panne_trouvee = models.TextField(blank=True, null=True)
     composants_utilises = models.ManyToManyField(
         Composant,
         blank=True,
-        related_name='interventions'
     )    
+
     status = models.CharField(max_length=100, choices=STATUS_INTERVENTION_CHOICES, default='enCours')
     date_sortie = models.DateTimeField(null=True, blank=True)
 
@@ -181,8 +187,33 @@ class Intervention(models.Model):
     def save(self, *args, **kwargs):
 
         super().save(*args, **kwargs)
-        
-        if self.composants_utilises.exists():
+                    
+        if self.status == 'Termine' and not self.date_sortie:
+            from django.utils import timezone
+            self.date_sortie = timezone.now()
+            super().save(*args, **kwargs)
+
+    
+    @property
+    def designation(self):
+        demande = self.demande_id
+        return f"{demande.type_materiel} - {demande.marque or 'Sans marque'}"
+    
+    @property
+    def numero_inventaire(self):
+        demande = self.demande_id
+        return demande.numero_inventaire
+
+
+
+
+
+
+
+
+
+
+""" if self.composants_utilises.exists():
             for composant in self.composants_utilises.all():
                 if composant.type_composant == 'Ancien':
                     composant.status = 'Used'
@@ -193,10 +224,4 @@ class Intervention(models.Model):
                         if composant.quantity == 0:
                             composant.disponible = False
                         composant.save()
-        
-            super().save(*args, **kwargs)
-            
-        if self.status == 'Termine' and not self.date_sortie:
-            from django.utils import timezone
-            self.date_sortie = timezone.now()
-            super().save(*args, **kwargs)
+        """
