@@ -259,3 +259,74 @@ class DashboardAPIView(APIView):
         }
 
         return Response(data)
+
+
+
+
+
+
+
+
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib import colors
+from io import BytesIO
+
+def export_equipements_pdf(request):
+    # Create a file-like buffer to receive PDF data
+    buffer = BytesIO()
+
+    # Create the PDF object, using the buffer as its "file"
+    p = canvas.Canvas(buffer, pagesize=letter)
+
+    # Set document metadata
+    p.setTitle("Equipements Report")
+
+    # Draw things on the PDF
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(100, 750, "Equipements Report")
+
+    # Get data from database
+    equipements = Equipement.objects.all().values_list(
+        'id', 'designation', 'numero_serie', 'numero_inventaire', 'created_at'
+    )
+
+    # Create table data
+    data = [['ID', 'Designation', 'Serial No', 'Inventory No', 'Created At']]
+    for equip in equipements:
+        data.append([
+            str(equip[0]),
+            equip[1],
+            equip[2],
+            equip[3],
+            equip[4].strftime('%Y-%m-%d')
+        ])
+
+    # Create table
+    table = Table(data, colWidths=[50, 200, 100, 100, 100])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007BFF')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F8F9FA')),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#DEE2E6'))
+    ]))
+
+    # Position table on page
+    table.wrapOn(p, 400, 600)
+    table.drawOn(p, 50, 600)
+
+    # Close the PDF object cleanly
+    p.showPage()
+    p.save()
+
+    # File response with PDF
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="equipements_report.pdf"'
+    return response
