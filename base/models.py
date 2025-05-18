@@ -130,7 +130,7 @@ class Demande(models.Model):
 
     type_materiel = models.CharField(max_length=100, choices=TYPE_MATERIEL_CHOICES)
     marque = models.CharField(max_length=100, blank=True, null=True)
-    numero_inventaire = models.CharField(max_length=100)
+    numero_inventaire = models.CharField(max_length=100 , blank=True, null=True)
     service_affectation = models.CharField(max_length=100)
     date_depot = models.DateTimeField(auto_now_add=True)
     nom_deposant = models.CharField(max_length=100)
