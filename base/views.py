@@ -14,14 +14,19 @@ from django.db.models import Count
 class CategorieViewSet(viewsets.ModelViewSet):
     queryset = Categorie.objects.all()
     serializer_class = CategorieSerializer
+    permission_classes = [permissions.AllowAny]  
+
 
 class ComposantViewSet(viewsets.ModelViewSet):
     queryset = Composant.objects.all()
     serializer_class = ComposantSerializer
+    permission_classes = [permissions.AllowAny]  
+
     
 class   EquipementViewSet(viewsets.ModelViewSet):
     queryset = Equipement.objects.all()
     serializer_class = EquipementSerializer
+    permission_classes = [permissions.AllowAny]  
 
 
 #-------------------Users----------------------
