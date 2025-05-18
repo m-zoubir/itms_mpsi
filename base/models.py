@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser
+import datetime
 
 
 class Categorie(models.Model):
@@ -27,7 +28,7 @@ class Composant(models.Model):
     designation = models.TextField()
     observation = models.TextField(blank=True, null=True)
     categorie = models.ForeignKey(Categorie, on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=datetime.datetime(2020, 1, 1)) 
     numero_serie_eq_source = models.CharField(max_length=100, blank=True, null=True)
     numero_inventaire_eq_source = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(

@@ -25,12 +25,13 @@ class ComposantSerializer(serializers.ModelSerializer):
             'id', 'type_composant', 'model_reference', 'numero_serie',
             'designation', 'observation', 'categorie' ,'categorie_details',
             'numero_serie_eq_source', 'numero_inventaire_eq_source', 'status',
-            'quantity', 'disponible', 'image'
+            'quantity', 'disponible', 'image' , 'created_at'
         ]
         extra_kwargs = {
             'disponible': {'default': True},
             'quantity': {'default': 1},
-            'status': {'default': 'Free'}
+            'status': {'default': 'Free'},
+            'created_at': {'read_only': True},
         }
 
     def validate(self, data):
