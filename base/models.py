@@ -11,6 +11,7 @@ class Categorie(models.Model):
     def __str__(self):
         return self.designation
 
+
 class Composant(models.Model):
     TYPE_CHOICES = [
         ('Nouveau', 'Nouveau'),

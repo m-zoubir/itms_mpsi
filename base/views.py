@@ -16,32 +16,6 @@ class CategorieViewSet(viewsets.ModelViewSet):
     serializer_class = CategorieSerializer
     permission_classes = [permissions.AllowAny]
     
-    # Override update method to add debug logging and ensure proper saving
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        
-        print(f"Update request received for category {instance.id_categorie}")
-        print(f"Current designation: {instance.designation}")
-        print(f"Request data: {request.data}")
-        
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        
-        print(f"After update, designation: {instance.designation}")
-        
-        if getattr(instance, '_prefetched_objects_cache', None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
-            instance._prefetched_objects_cache = {}
-            
-        return Response(serializer.data)
-    
-    # Explicitly implement perform_update to ensure changes are saved
-    def perform_update(self, serializer):
-        saved_instance = serializer.save()
-        print(f"After save, designation: {saved_instance.designation}")
 
 class ComposantViewSet(viewsets.ModelViewSet):
     queryset = Composant.objects.all()
@@ -329,7 +303,7 @@ def export_equipements_pdf(request):
         ])
 
     # Create table
-    table = Table(data, colWidths=[ 450, 100])
+    table = Table(data, colWidths=[ 400, 100, 100])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007BFF')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
