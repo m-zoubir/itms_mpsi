@@ -265,65 +265,77 @@ class DashboardAPIView(APIView):
 
 
 
-
-
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import Table, TableStyle
+from reportlab.platypus import Table, TableStyle, Paragraph
 from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
+from .models import Equipement
 
 def export_equipements_pdf(request):
-    # Create a file-like buffer to receive PDF data
     buffer = BytesIO()
-
-    # Create the PDF object, using the buffer as its "file"
     p = canvas.Canvas(buffer, pagesize=letter)
-
-    # Set document metadata
-    p.setTitle("Equipements Report")
-
-    # Draw things on the PDF
+    
+    # Set up styles for wrapped text
+    styles = getSampleStyleSheet()
+    style_normal = styles['Normal']
+    style_normal.wordWrap = 'CJK'  # This enables text wrapping
+    style_normal.fontSize = 9
+    style_normal.leading = 10  # Line spacing
+    
+    # Title
     p.setFont("Helvetica-Bold", 16)
     p.drawString(100, 750, "Equipements Report")
-
-    # Get data from database
-    equipements = Equipement.objects.all().values_list(
-         'designation', 'numero_inventaire', 'created_at'
-    )
-
-    # Create table data
-    data = [[ 'Designation', 'Inventory No', 'Created At']]
+    
+    # Get data
+    equipements = Equipement.objects.all()
+    
+    # Prepare table data with wrapped text
+    data = [
+        [
+            Paragraph('<b>ID</b>', style_normal),
+            Paragraph('<b>Designation</b>', style_normal),
+            Paragraph('<b>Serial No</b>', style_normal),
+            Paragraph('<b>Inventory No</b>', style_normal),
+            Paragraph('<b>Created At</b>', style_normal)
+        ]
+    ]
+    
     for equip in equipements:
         data.append([
-            str(equip[0]),
-            equip[1],
-            equip[2].strftime('%Y-%m-%d')
+            Paragraph(str(equip.id), style_normal),
+            Paragraph(equip.designation, style_normal),
+            Paragraph(equip.numero_serie, style_normal),
+            Paragraph(equip.numero_inventaire, style_normal),
+            Paragraph(equip.created_at.strftime('%Y-%m-%d'), style_normal)
         ])
-
-    # Create table
-    table = Table(data, colWidths=[50, 200, 100, 100, 100])
+    
+    # Create table with adjusted column widths
+    table = Table(data, colWidths=[40, 180, 90, 90, 80])
+    
+    # Table style
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007BFF')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmike),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Align content to top of cell
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
         ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F8F9FA')),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#DEE2E6'))
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#DEE2E6')),
+        ('LEADING', (0, 0), (-1, -1), 10),  # Consistent line spacing
     ]))
-
-    # Position table on page
-    table.wrapOn(p, 400, 600)
-    table.drawOn(p, 50, 600)
-
-    # Close the PDF object cleanly
+    
+    # Position table allowing space for wrapping
+    table.wrapOn(p, 500, 600)
+    table.drawOn(p, 30, 600 - table._height)  # Dynamic positioning
+    
     p.showPage()
     p.save()
-
-    # File response with PDF
+    
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="equipements_report.pdf"'
