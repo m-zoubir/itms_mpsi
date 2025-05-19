@@ -14,8 +14,34 @@ from django.db.models import Count
 class CategorieViewSet(viewsets.ModelViewSet):
     queryset = Categorie.objects.all()
     serializer_class = CategorieSerializer
-    permission_classes = [permissions.AllowAny]  
-
+    permission_classes = [permissions.AllowAny]
+    
+    # Override update method to add debug logging and ensure proper saving
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        print(f"Update request received for category {instance.id_categorie}")
+        print(f"Current designation: {instance.designation}")
+        print(f"Request data: {request.data}")
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        print(f"After update, designation: {instance.designation}")
+        
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+            
+        return Response(serializer.data)
+    
+    # Explicitly implement perform_update to ensure changes are saved
+    def perform_update(self, serializer):
+        saved_instance = serializer.save()
+        print(f"After save, designation: {saved_instance.designation}")
 
 class ComposantViewSet(viewsets.ModelViewSet):
     queryset = Composant.objects.all()
@@ -265,77 +291,65 @@ class DashboardAPIView(APIView):
 
 
 
+
+
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import Table, TableStyle, Paragraph
+from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
-from .models import Equipement
 
 def export_equipements_pdf(request):
+    # Create a file-like buffer to receive PDF data
     buffer = BytesIO()
+
+    # Create the PDF object, using the buffer as its "file"
     p = canvas.Canvas(buffer, pagesize=letter)
-    
-    # Set up styles for wrapped text
-    styles = getSampleStyleSheet()
-    style_normal = styles['Normal']
-    style_normal.wordWrap = 'CJK'  # This enables text wrapping
-    style_normal.fontSize = 9
-    style_normal.leading = 10  # Line spacing
-    
-    # Title
+     
+    # Set document metadata
+    p.setTitle("Equipements Report")
+
+    # Draw things on the PDF
     p.setFont("Helvetica-Bold", 16)
     p.drawString(100, 750, "Equipements Report")
-    
-    # Get data
-    equipements = Equipement.objects.all()
-    
-    # Prepare table data with wrapped text
-    data = [
-        [
-            Paragraph('<b>ID</b>', style_normal),
-            Paragraph('<b>Designation</b>', style_normal),
-            Paragraph('<b>Serial No</b>', style_normal),
-            Paragraph('<b>Inventory No</b>', style_normal),
-            Paragraph('<b>Created At</b>', style_normal)
-        ]
-    ]
-    
+
+    # Get data from database
+    equipements = Equipement.objects.all().values_list(
+         'designation', 'numero_inventaire', 'created_at'
+    )
+
+    # Create table data
+    data = [[ 'Designation', 'Inventory No', 'Created At']]
     for equip in equipements:
         data.append([
-            Paragraph(str(equip.id), style_normal),
-            Paragraph(equip.designation, style_normal),
-            Paragraph(equip.numero_serie, style_normal),
-            Paragraph(equip.numero_inventaire, style_normal),
-            Paragraph(equip.created_at.strftime('%Y-%m-%d'), style_normal)
+            str(equip[0]),
+            equip[1],
+            equip[2].strftime('%Y-%m-%d')
         ])
-    
-    # Create table with adjusted column widths
-    table = Table(data, colWidths=[40, 180, 90, 90, 80])
-    
-    # Table style
+
+    # Create table
+    table = Table(data, colWidths=[ 450, 100])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007BFF')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmike),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Align content to top of cell
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
         ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F8F9FA')),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#DEE2E6')),
-        ('LEADING', (0, 0), (-1, -1), 10),  # Consistent line spacing
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#DEE2E6'))
     ]))
-    
-    # Position table allowing space for wrapping
-    table.wrapOn(p, 500, 600)
-    table.drawOn(p, 30, 600 - table._height)  # Dynamic positioning
-    
+
+    # Position table on page
+    table.wrapOn(p, 400, 600)
+    table.drawOn(p, 50, 600)
+
+    # Close the PDF object cleanly
     p.showPage()
     p.save()
-    
+
+    # File response with PDF
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="equipements_report.pdf"'
