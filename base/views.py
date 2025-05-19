@@ -282,11 +282,11 @@ def export_equipements_pdf(request):
     p = canvas.Canvas(buffer, pagesize=letter)
      
     # Set document metadata
-    p.setTitle("Equipements Report")
+    p.setTitle("Listing des equipements en reforme")
 
     # Draw things on the PDF
     p.setFont("Helvetica-Bold", 16)
-    p.drawString(100, 750, "Equipements Report")
+    p.drawString(100, 750, "Listing des equipements en reforme")
 
     # Get data from database
     equipements = Equipement.objects.all().values_list(
