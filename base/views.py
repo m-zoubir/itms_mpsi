@@ -303,7 +303,7 @@ def export_equipements_pdf(request):
         ])
 
     # Create table
-    table = Table(data, colWidths=[ 400, 100, 100])
+    table = Table(data, colWidths=[ 400, 75, 75])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007BFF')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
