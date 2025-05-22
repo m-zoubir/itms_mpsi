@@ -59,6 +59,7 @@ class ComposantViewSet(viewsets.ModelViewSet):
     
 
     
+    
 class   EquipementViewSet(viewsets.ModelViewSet):
     queryset = Equipement.objects.all()
     serializer_class = EquipementSerializer

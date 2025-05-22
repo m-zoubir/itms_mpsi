@@ -19,22 +19,23 @@ class ComposantSerializer(serializers.ModelSerializer):
         allow_null=True
     )
 
-    
-    
-    
     class Meta:
         model = Composant
         fields = [
             'id', 'type_composant', 'model_reference', 'numero_serie',
             'designation', 'observation', 'categorie' ,'categorie_details',
             'numero_serie_eq_source', 'numero_inventaire_eq_source', 'status',
-            'quantity', 'disponible', 'image' , 'created_at'
+            'quantity', 'disponible', 'image' , 'created_at', 'image_url'
         ]
+        
+        read_only_fields = ('created_at', 'image_url')
+
         extra_kwargs = {
             'disponible': {'default': True},
             'quantity': {'default': 1},
             'status': {'default': 'Free'},
             'created_at': {'read_only': True},
+            'image': {'required': False, 'allow_null': True}
         }
 
     def validate(self, data):

@@ -239,7 +239,7 @@ data = {
       "categorie": 1,
       "numero_serie_eq_source": "HPDT78921",
       "numero_inventaire_eq_source": "INV-2022-001",
-      "status": "Free"
+      "status": "Free",
     }
   ],
   
@@ -548,7 +548,7 @@ for component in data["components"]:
     )) + 1
     
     response = requests.post(f"{BASE_URL}composants/", json=component)
-    print(f"Component {component['designation']}: {response.status_code}")
+    print(f"Component {component['designation']}: {response}")
 
 # ================== Create Demandes ==================
 for demande in data["demandes"]:
