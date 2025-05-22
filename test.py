@@ -447,7 +447,7 @@ data = {
     },
     {
       "demande_id": 3,
-      "technicien": 2,
+      "technicien": 1,
       "numero_serie": "LEN-TH-003",
       "priorite": "Basse",
       "panne_trouvee": "Carte graphique défectueuse, carte mère endommagée",
