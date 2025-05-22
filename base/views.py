@@ -9,13 +9,26 @@ from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from django.db.models.functions import ExtractMonth
 from django.db.models import Count
-
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.db.models import Count
+from django.db.models.functions import ExtractMonth, ExtractYear
+from django.utils.timezone import now
 
 class CategorieViewSet(viewsets.ModelViewSet):
     queryset = Categorie.objects.all()
     serializer_class = CategorieSerializer
     permission_classes = [permissions.AllowAny]
     
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class ComposantViewSet(viewsets.ModelViewSet):
     queryset = Composant.objects.all()
@@ -31,11 +44,35 @@ class ComposantViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    def perform_create(self, serializer):
+        serializer.save()
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.image:
+            instance.image.delete()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
     
 class   EquipementViewSet(viewsets.ModelViewSet):
     queryset = Equipement.objects.all()
     serializer_class = EquipementSerializer
     permission_classes = [permissions.AllowAny]  
+    
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 #-------------------Users----------------------
@@ -123,20 +160,37 @@ class DemandeViewSet(viewsets.ModelViewSet):
     serializer_class = DemandeSerializer
     permission_classes = [permissions.AllowAny]  
 
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 class InterventionViewSet(viewsets.ModelViewSet):
     queryset = Intervention.objects.all()
     serializer_class = InterventionSerializer
     permission_classes = [permissions.AllowAny]  
 
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 
 
 #------------------Dashboard--------------------------
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from django.db.models import Count
-from django.db.models.functions import ExtractMonth, ExtractYear
-from django.utils.timezone import now
+
 
 class DashboardAPIView(APIView):
     def get(self, request):

@@ -559,7 +559,7 @@ for demande in data["demandes"]:
 for intervention in data["interventions"]:
     intervention["technicien"] = 1  # Force technicien ID to 1
     response = requests.post(f"{BASE_URL}interventions/", json=intervention)
-    print(f"Intervention for demande {intervention['demande_id']}: {response.status_code}")
+    print(f"Intervention for demande {intervention['demande_id']}: {response}")
 
 # ================== Create Equipements ==================
 for equipement in data["equipements"]:

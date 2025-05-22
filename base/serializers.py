@@ -11,13 +11,16 @@ class CategorieSerializer(serializers.ModelSerializer):
 
 class ComposantSerializer(serializers.ModelSerializer):
     categorie_details = CategorieSerializer(source='categorie', read_only=True)
-    
+    image_url = serializers.SerializerMethodField()
     categorie = serializers.PrimaryKeyRelatedField(
         queryset=Categorie.objects.all(),
         write_only=True,
         required=False,
         allow_null=True
     )
+
+    
+    
     
     class Meta:
         model = Composant
@@ -65,13 +68,21 @@ class ComposantSerializer(serializers.ModelSerializer):
         return data
     
 
+    def get_image_url(self, obj):
+        if obj.image:
+            return self.context['request'].build_absolute_uri(obj.image.url)
+        return None
+
+
+    """
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if instance.image:
             representation['image'] = instance.image.url
         return representation
     
-
+    """
+    
 
 class EquipementSerializer(serializers.ModelSerializer):
 
@@ -136,11 +147,12 @@ class PasswordSerializer(serializers.Serializer):
 
 class InterventionSerializer(serializers.ModelSerializer):
     composants_utilises = ComposantSerializer(many=True, read_only=True)
+    numero_inventaire = serializers.CharField(read_only=True)
 
     class Meta:
         model = Intervention
         fields = '__all__'
-        read_only_fields = ('date_sortie',)
+        read_only_fields = ('date_sortie','numero_inventaire')
 
 class DemandeSerializer(serializers.ModelSerializer):
     interventions = InterventionSerializer(many=True, read_only=True)
