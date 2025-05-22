@@ -178,3 +178,18 @@ class DashboardSerializer(serializers.Serializer):
     interventions_diff_rate = serializers.FloatField()
 
     demandes_by_month_year = serializers.JSONField()
+
+
+
+
+
+
+from rest_framework import serializers
+import os
+from django.conf import settings
+
+class MediaFileSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    url = serializers.CharField()
+    size = serializers.IntegerField()
+    last_modified = serializers.DateTimeField()

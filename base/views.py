@@ -58,7 +58,7 @@ class ComposantViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
     
 
-    
+
     
 class   EquipementViewSet(viewsets.ModelViewSet):
     queryset = Equipement.objects.all()
@@ -383,3 +383,48 @@ def export_equipements_pdf(request):
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="equipements_report.pdf"'
     return response
+
+
+
+
+
+
+
+
+
+
+
+
+# views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+import os
+from django.conf import settings
+from .serializers import MediaFileSerializer
+from datetime import datetime
+
+
+
+
+
+
+class MediaListView(APIView):
+    def get(self, request):
+        media_root = settings.MEDIA_ROOT
+        media_url = settings.MEDIA_URL
+        
+        files = []
+        for root, dirs, filenames in os.walk(media_root):
+            for filename in filenames:
+                filepath = os.path.join(root, filename)
+                relpath = os.path.relpath(filepath, media_root)
+                
+                files.append({
+                    'name': filename,
+                    'url': request.build_absolute_uri(media_url + relpath),
+                    'size': os.path.getsize(filepath),
+                    'last_modified': datetime.fromtimestamp(os.path.getmtime(filepath))
+                })
+        
+        serializer = MediaFileSerializer(files, many=True)
+        return Response(serializer.data)
