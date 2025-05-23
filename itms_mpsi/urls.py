@@ -31,7 +31,7 @@ urlpatterns = [
     path('api/equipements-export-pdf/', export_equipements_pdf, name='equipement-export-pdf'),
     path('api/equipements-pdf-email/', EmailEquipementsPDF.as_view(), name='email_equipements_pdf'),
     path('api/media/', MediaListView.as_view(), name='media-list'),
-    path('send-html-email/', DynamicHTMLEmailView.as_view(), name='send_html_email'),
+    path('api/send-html-email/', DynamicHTMLEmailView.as_view(), name='send_html_email'),
 
 
     ]
