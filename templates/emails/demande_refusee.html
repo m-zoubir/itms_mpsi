@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { color: #e74c3c; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+        .reason { background-color: #f9f9f9; border-left: 4px solid #e74c3c; padding: 10px; margin: 15px 0; }
+        .footer { margin-top: 30px; font-size: 14px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <div class="header">Demande de réparation refusée</div>
+    
+    <p>Bonjour {{ username }},</p>
+    
+    <p>Nous sommes au regret de vous informer que votre demande pour l'équipement <strong>n°{{ numero }}</strong> ne peut être acceptée pour les raisons suivantes :</p>
+    
+    <div class="reason">
+        {{ cause }}
+    </div>
+    
+    <p>Pour toute question complémentaire, veuillez contacter notre service.</p>
+    
+    <div class="footer">
+        <p>Merci,</p>
+        <p>Service Maintenance</p>
+    </div>
+</body>
+</html>

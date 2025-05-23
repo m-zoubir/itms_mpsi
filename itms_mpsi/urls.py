@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/dashboard/', DashboardAPIView.as_view(), name='dashboard'),
     path('api/equipements-export-pdf/', export_equipements_pdf, name='equipement-export-pdf'),
     path('api/media/', MediaListView.as_view(), name='media-list'),
+    path('send-html-email/', DynamicHTMLEmailView.as_view(), name='send_html_email'),
 
 
     ]

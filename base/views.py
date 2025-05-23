@@ -13,7 +13,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Count
 from django.db.models.functions import ExtractMonth, ExtractYear
-from django.utils.timezone import now
+import os
+from django.conf import settings
+from datetime import datetime
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib import colors
+from io import BytesIO
+
+
 
 class CategorieViewSet(viewsets.ModelViewSet):
     queryset = Categorie.objects.all()
@@ -320,15 +330,6 @@ class DashboardAPIView(APIView):
 
 
 
-
-
-from django.http import HttpResponse
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import Table, TableStyle
-from reportlab.lib import colors
-from io import BytesIO
-
 def export_equipements_pdf(request):
     # Create a file-like buffer to receive PDF data
     buffer = BytesIO()
@@ -385,23 +386,94 @@ def export_equipements_pdf(request):
     return response
 
 
-
-
-
-
-
-
-
-
-
-
 # views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
-import os
-from django.conf import settings
-from .serializers import MediaFileSerializer
-from datetime import datetime
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from rest_framework import status
+
+class DynamicHTMLEmailView(APIView):
+    def post(self, request):
+        try:
+            # Required fields validation
+            required_fields = ['email', 'subject', 'username']
+            if not all(field in request.data for field in required_fields):
+                return Response(
+                    {'error': f'Missing required fields: {", ".join(required_fields)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Extract data from POST
+            recipient = request.data['email']
+            subject = request.data['subject'] 
+            username = request.data['username']
+            
+            if (subject  not in ["Demande Acceptee" , "Reparation Terminee","Demande Refusee","Equipement Irreparable"]):
+                return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            html_content =  None
+            if (subject == "Demande Acceptee"):
+                
+                numero = request.data.get('numeroInventaire', '        ')               
+                html_content = render_to_string('emails/demande_acceptee.html', {
+                    'username': username,
+                    'numero': numero,
+                })
+
+
+            elif (subject == "Reparation Terminee"):
+                numero = request.data.get('numeroInventaire', '        ')   
+                designation =  request.data.get('designation', '        ')              
+                html_content = render_to_string('emails/intervention_terminee.html', {
+                    'username': username,
+                    'numero': numero,
+                    'designation':designation
+                })    
+
+            elif (subject == "Demande Refusee"):
+                numero = request.data.get('numeroInventaire', '        ')
+                cause = request.data.get('cause', '        ')               
+                html_content = render_to_string('emails/demande_refusee.html', {
+                    'username': username,
+                    'numero': numero,
+                    'cause':cause
+                })
+            
+            elif (subject == "Equipement Irreparable"):
+                numero = request.data.get('numeroInventaire', '        ')    
+                cause = request.data.get('cause', '        ')           
+                html_content = render_to_string('emails/equipement_irreparable.html', {
+                    'username': username,
+                    'numero': numero,
+                    'cause':cause
+                })
+
+
+            # Create and send email
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=subject,
+                from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                to=[recipient],
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+
+            return Response(
+                {'status': 'Email sent successfully'},
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 
 

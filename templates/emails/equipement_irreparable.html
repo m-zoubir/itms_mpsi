@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { color: #e67e22; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+        .reason { background-color: #f9f9f9; border-left: 4px solid #e67e22; padding: 10px; margin: 15px 0; }
+        .footer { margin-top: 30px; font-size: 14px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <div class="header">Équipement irréparable</div>
+    
+    <p>Bonjour {{ username }},</p>
+    
+    <p>Malheureusement, votre équipement <strong>n°{{ numero }}</strong> n'a pas pu être réparé.</p>
+    
+    <div class="reason">
+        <p><strong>Motif :</strong> {{ cause }}</p>
+    </div>
+    
+    <p>L'équipement a été redirigé vers le service d'inventaire pour réforme.</p>
+    
+    <div class="footer">
+        <p>Merci,</p>
+        <p>Service Maintenance</p>
+    </div>
+</body>
+</html>
