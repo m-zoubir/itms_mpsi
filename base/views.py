@@ -22,7 +22,9 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 from io import BytesIO
-
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
 
 
 class CategorieViewSet(viewsets.ModelViewSet):
@@ -386,12 +388,49 @@ def export_equipements_pdf(request):
     return response
 
 
-# views.py
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from rest_framework import status
+
+class EmailEquipementsPDF(APIView):
+    """Endpoint for sending PDF via email"""
+    def post(self, request):
+        try:
+            recipient_email = request.data.get('email')
+            if not recipient_email:
+                return Response(
+                    {"error": "Email recipient is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Generate PDF
+            pdf_response = export_equipements_pdf(request)
+            pdf_content = pdf_response.content
+            
+            # Send email
+            email = EmailMessage(
+                subject="Liste des équipements en réforme",
+                body="Veuillez trouver ci-joint la liste des équipements en réforme.",
+                from_email="noreply@votreentreprise.com",
+                to=[recipient_email],
+            )
+            
+            # Attach PDF
+            email.attach(
+                filename="equipements_reforme.pdf",
+                content=pdf_content,
+                mimetype="application/pdf"
+            )
+            email.send()
+            
+            return Response(
+                {"status": "PDF sent successfully"},
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class DynamicHTMLEmailView(APIView):
     def post(self, request):
