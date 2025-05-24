@@ -178,18 +178,23 @@ class InterventionSerializer(serializers.ModelSerializer):
         adding=False when removing/unusing composants (quantity +1)
         """
         for composant in composants:
+            
             if adding:
+                print(f"Adding Before : {composant.quantity}")
                 if composant.type_composant == 'Nouveau':
                     composant.quantity = max(0, (composant.quantity or 1) - 1)
                     composant.disponible = composant.quantity > 0
                 else :
                     composant.status = 'Used'
+                print(f"Adding After : {composant.quantity}")
             else:
+                print(f"Not Adding Before : {composant.quantity}")
                 if composant.type_composant == 'Nouveau':
                     composant.quantity = (composant.quantity or 0) + 1
                     composant.disponible = True
                 else:
                     composant.status = 'Free'
+                print(f"Not Adding After : {composant.quantity}")
             composant.save()
 
 
