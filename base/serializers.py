@@ -145,15 +145,90 @@ class PasswordSerializer(serializers.Serializer):
 
 #-----------------------Interventions et Demandes------------------------------
 
-
+"""
 class InterventionSerializer(serializers.ModelSerializer):
-    composants_utilises = ComposantSerializer(many=True, read_only=True)
+    composants_utilises = ComposantSerializer(many=True,  required=False )
     numero_inventaire = serializers.CharField(read_only=True)
 
     class Meta:
         model = Intervention
         fields = '__all__'
         read_only_fields = ('date_sortie','numero_inventaire')
+"""
+
+class InterventionSerializer(serializers.ModelSerializer):
+    composants_utilises = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Composant.objects.all(),
+        required=False
+    )
+    numero_inventaire = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Intervention
+        fields = '__all__'
+        read_only_fields = ('date_sortie', 'numero_inventaire')
+
+    
+
+    def handle_composant_updates(self, composants, adding=True):
+        """
+        Helper method to update composant quantities and status
+        adding=True when adding/using composants (quantity -1)
+        adding=False when removing/unusing composants (quantity +1)
+        """
+        for composant in composants:
+            if adding:
+                if composant.type_composant == 'Nouveau':
+                    composant.quantity = max(0, (composant.quantity or 1) - 1)
+                    composant.disponible = composant.quantity > 0
+                else :
+                    composant.status = 'Used'
+            else:
+                if composant.type_composant == 'Nouveau':
+                    composant.quantity = (composant.quantity or 0) + 1
+                    composant.disponible = True
+                else:
+                    composant.status = 'Free'
+            composant.save()
+
+
+    def create(self, validated_data):
+        composants = validated_data.pop('composants_utilises', [])
+        
+        intervention = Intervention.objects.create(**validated_data)
+        
+        if composants:
+            self.handle_composant_updates(composants, adding=True)
+            intervention.composants_utilises.set(composants)
+        
+        return intervention
+
+    def update(self, instance, validated_data):
+        old_composants = list(instance.composants_utilises.all())
+        
+        new_composants = validated_data.pop('composants_utilises', [])
+        
+        # Update the intervention instance
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        removed_composants = set(old_composants) - set(new_composants)
+        if removed_composants:
+            self.handle_composant_updates(removed_composants, adding=False)
+        
+        added_composants = set(new_composants) - set(old_composants)
+        if added_composants:
+            self.handle_composant_updates(added_composants, adding=True)
+        
+        instance.composants_utilises.set(new_composants)
+        
+        return instance
+
+
+
+    
 
 class DemandeSerializer(serializers.ModelSerializer):
     interventions = InterventionSerializer(many=True, read_only=True)

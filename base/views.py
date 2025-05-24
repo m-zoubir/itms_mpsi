@@ -26,7 +26,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 
-
+#-----------------------------------------CATEGORIE--------------------------------------
 class CategorieViewSet(viewsets.ModelViewSet):
     queryset = Categorie.objects.all()
     serializer_class = CategorieSerializer
@@ -41,7 +41,7 @@ class CategorieViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-
+#-----------------------------------------COMPOSANT--------------------------------------
 class ComposantViewSet(viewsets.ModelViewSet):
     queryset = Composant.objects.all()
     serializer_class = ComposantSerializer
@@ -69,9 +69,7 @@ class ComposantViewSet(viewsets.ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-
-
-    
+#-----------------------------------------EQUIPEMENT--------------------------------------
 class   EquipementViewSet(viewsets.ModelViewSet):
     queryset = Equipement.objects.all()
     serializer_class = EquipementSerializer
@@ -87,25 +85,7 @@ class   EquipementViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-
-#-------------------Users----------------------
-
-class AdminCreateUserView(generics.CreateAPIView):
-    serializer_class = AdminUserCreateSerializer
-    permission_classes = [permissions.IsAdminUser] 
-    
-    def perform_create(self, serializer):
-        user = serializer.save()
-        return Response({
-            'id': user.id,
-            'email': user.email,
-            'username': user.username,
-            'message': 'User created successfully'
-        }, status=status.HTTP_201_CREATED)
-
-
-
-
+#-----------------------------------------LOGIN LOGOUT--------------------------------------
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
     
@@ -126,9 +106,6 @@ class LoginView(APIView):
             'access': str(refresh.access_token),
         })
 
-
-
-
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -138,6 +115,19 @@ class LogoutView(APIView):
         
         return response
 
+#-----------------------------------------USERS MANAGEMENT--------------------------------------
+class AdminCreateUserView(generics.CreateAPIView):
+    serializer_class = AdminUserCreateSerializer
+    permission_classes = [permissions.IsAdminUser] 
+    
+    def perform_create(self, serializer):
+        user = serializer.save()
+        return Response({
+            'id': user.id,
+            'email': user.email,
+            'username': user.username,
+            'message': 'User created successfully'
+        }, status=status.HTTP_201_CREATED)
 
 
 class AdminUserListView(generics.ListAPIView):
@@ -165,10 +155,7 @@ class AdminPasswordUpdateView(generics.UpdateAPIView):
         user.save()
         return Response({'message': 'Password updated successfully'})
     
-
-#------------------Interventions et Demandes--------------------------
-
-
+#-----------------------------------------DEMANDE--------------------------------------
 class DemandeViewSet(viewsets.ModelViewSet):
     queryset = Demande.objects.all()
     serializer_class = DemandeSerializer
@@ -184,7 +171,7 @@ class DemandeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-
+#-----------------------------------------INTERVENTION--------------------------------------
 class InterventionViewSet(viewsets.ModelViewSet):
     queryset = Intervention.objects.all()
     serializer_class = InterventionSerializer
@@ -199,13 +186,7 @@ class InterventionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-
-
-
-#------------------Dashboard--------------------------
-
-
-
+#-----------------------------------------DASHBOARD--------------------------------------
 class DashboardAPIView(APIView):
     def get(self, request):
         current_date = now()
@@ -328,32 +309,21 @@ class DashboardAPIView(APIView):
 
         return Response(data)
 
-
-
-
-
-
+#-----------------------------------------EQUIPEMENT PDF--------------------------------------
 def export_equipements_pdf(request):
-    # Create a file-like buffer to receive PDF data
     buffer = BytesIO()
 
-    # Create the PDF object, using the buffer as its "file"
     p = canvas.Canvas(buffer, pagesize=letter)
-     
-    # Set document metadata
     p.setTitle("Listing des equipements en reforme")
-
-    # Draw things on the PDF
     p.setFont("Helvetica-Bold", 16)
     p.drawString(100, 750, "Listing des equipements en reforme")
 
-    # Get data from database
     equipements = Equipement.objects.all().values_list(
          'designation', 'numero_inventaire', 'created_at'
     )
 
-    # Create table data
     data = [[ 'Designation', 'Inventory No', 'Created At']]
+
     for equip in equipements:
         data.append([
             str(equip[0]),
@@ -361,7 +331,6 @@ def export_equipements_pdf(request):
             equip[2].strftime('%Y-%m-%d')
         ])
 
-    # Create table
     table = Table(data, colWidths=[ 400, 75, 75])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007BFF')),
@@ -374,24 +343,19 @@ def export_equipements_pdf(request):
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#DEE2E6'))
     ]))
 
-    # Position table on page
     table.wrapOn(p, 400, 600)
     table.drawOn(p, 50, 600)
 
-    # Close the PDF object cleanly
     p.showPage()
     p.save()
 
-    # File response with PDF
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="equipements_report.pdf"'
     return response
 
 
-
 class EmailEquipementsPDF(APIView):
-    """Endpoint for sending PDF via email"""
     def post(self, request):
         try:
             recipient_email = request.data.get('email')
@@ -432,11 +396,10 @@ class EmailEquipementsPDF(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
+#-----------------------------------------EMAILS--------------------------------------
 class DynamicHTMLEmailView(APIView):
     def post(self, request):
         try:
-            # Required fields validation
             required_fields = ['email', 'subject', 'username']
             if not all(field in request.data for field in required_fields):
                 return Response(
@@ -444,7 +407,6 @@ class DynamicHTMLEmailView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Extract data from POST
             recipient = request.data['email']
             subject = request.data['subject'] 
             username = request.data['username']
@@ -493,11 +455,11 @@ class DynamicHTMLEmailView(APIView):
                 })
 
 
-            # Create and send email
+
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=subject,
-                from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                from_email=None,  
                 to=[recipient],
             )
             email.attach_alternative(html_content, "text/html")
@@ -514,12 +476,7 @@ class DynamicHTMLEmailView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-
-
-
-
-
+#-----------------------------------------MEDIA LIST---------------------------------------
 class MediaListView(APIView):
     def get(self, request):
         media_root = settings.MEDIA_ROOT
