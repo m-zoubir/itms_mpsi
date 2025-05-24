@@ -2,6 +2,11 @@ from rest_framework import serializers
 from .models import Categorie, Composant , Equipement , User , Demande , Intervention
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
+from rest_framework import serializers
+import os
+from django.conf import settings
+
+
 
 class CategorieSerializer(serializers.ModelSerializer):
 
@@ -145,16 +150,7 @@ class PasswordSerializer(serializers.Serializer):
 
 #-----------------------Interventions et Demandes------------------------------
 
-"""
-class InterventionSerializer(serializers.ModelSerializer):
-    composants_utilises = ComposantSerializer(many=True,  required=False )
-    numero_inventaire = serializers.CharField(read_only=True)
 
-    class Meta:
-        model = Intervention
-        fields = '__all__'
-        read_only_fields = ('date_sortie','numero_inventaire')
-"""
 
 class InterventionSerializer(serializers.ModelSerializer):
     composants_utilises = serializers.PrimaryKeyRelatedField(
@@ -222,8 +218,11 @@ class InterventionSerializer(serializers.ModelSerializer):
         removed_composants = set(old_composants) - set(new_composants)
         if removed_composants:
             self.handle_composant_updates(removed_composants, adding=False)
-        
+        for removed in removed_composants:
+            print(f"removed : {removed.quantity}")
         added_composants = set(new_composants) - set(old_composants)
+        for added in added_composants:
+            print(f"added : {added.quantity}")
         if added_composants:
             self.handle_composant_updates(added_composants, adding=True)
         
@@ -263,10 +262,6 @@ class DashboardSerializer(serializers.Serializer):
 
 
 
-
-from rest_framework import serializers
-import os
-from django.conf import settings
 
 class MediaFileSerializer(serializers.Serializer):
     name = serializers.CharField()
