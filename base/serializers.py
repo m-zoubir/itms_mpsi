@@ -177,7 +177,7 @@ class InterventionSerializer(serializers.ModelSerializer):
             
             if adding:
                 print(f"Adding Before : {composant.quantity}")
-                if composant.type_composant == 'Nouveau':
+                if composant.type_composant == 'Nouveau' and composant.disponible == True:
                     composant.quantity = max(0, (composant.quantity or 1) - 1)
                     composant.disponible = composant.quantity > 0
                 else :

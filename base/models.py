@@ -195,22 +195,3 @@ class Intervention(models.Model):
 
 
 
-
-
-
-
-
-
-
-""" if self.composants_utilises.exists():
-            for composant in self.composants_utilises.all():
-                if composant.type_composant == 'Ancien':
-                    composant.status = 'Used'
-                    composant.save()
-                elif composant.type_composant == 'Nouveau':
-                    if composant.quantity > 0:
-                        composant.quantity -= 1
-                        if composant.quantity == 0:
-                            composant.disponible = False
-                        composant.save()
-        """
